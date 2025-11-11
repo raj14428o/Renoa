@@ -152,8 +152,7 @@ Blogify/
 ├── .env # Environment variables
 ├── app.js # Main server file
 ├── package.json # Project dependencies
-├── package-lock.json
-└── blogSphere.zip # Archived backup of the project
+└── package-lock.json
 
 ```
 
