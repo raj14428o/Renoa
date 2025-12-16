@@ -37,14 +37,24 @@ app.use(methodOverride('_method'));
 
 app.get('/', async (req, res) => {
   const allBlogs = await Blog.find({})
-    .populate('createdBy')
-    .sort({ createdAt: -1 });
+    .populate('createdBy', 'fullName profileImageUrl')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const blogs = allBlogs.map(blog => ({
+    ...blog,
+    author: {
+      fullName: blog.createdBy.fullName,
+      profileImage: blog.createdBy.profileImageUrl 
+    }
+  }));
 
   res.render('Home', {
-    blogs: allBlogs,
+    blogs,
     user: req.user,
   });
 });
+
 
 app.use('/user', UserRoute);
 app.use('/blog', BlogRoute);
