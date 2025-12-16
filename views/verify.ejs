@@ -5,74 +5,98 @@
   <title>Verify OTP</title>
 
   <style>
-    /* ===== Auth Wrapper ===== */
-    .auth-wrapper {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      padding: 1rem;
-    }
+   /* ===== Page Base ===== */
+body {
+  margin: 0;
+  background: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
 
-    /* ===== Auth Card ===== */
-    .auth-card {
-      width: 100%;
-      max-width: 420px;
-      background: #ffffff;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    }
+/* ===== Auth Wrapper ===== */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  padding: 1rem;
+}
 
-    .auth-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 0.5rem;
-    }
+/* ===== Auth Card ===== */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 2.2rem;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
 
-    .auth-subtitle {
-      font-size: 0.9rem;
-      color: #6b7280;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+/* ===== Titles ===== */
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.4rem;
+}
 
-    /* ===== Inputs ===== */
-    .auth-card input {
-      border: 1.8px solid #d1d5db;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 0.95rem;
-    }
+.auth-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
 
-    .auth-card input:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
+/* ===== Inputs ===== */
+.auth-card input {
+  border: 1.8px solid #d1d5db;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+}
 
-    /* ===== Button ===== */
-    .auth-card button[type="submit"] {
-      width: 100%;
-      padding: 12px;
-      font-weight: 600;
-      border-radius: 8px;
-    }
+.auth-card input:focus {
+  border-color: #000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
+}
 
-    /* ===== Resend OTP ===== */
-    .resend-btn {
-      background: none;
-      border: none;
-      color: #2563eb;
-      font-size: 0.9rem;
-      cursor: pointer;
-      font-weight: 500;
-    }
+/* OTP emphasis */
+.otp-input {
+  text-align: center;
+  letter-spacing: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
 
-    .resend-btn:hover {
-      text-decoration: underline;
-    }
+/* ===== Primary Button ===== */
+.auth-card button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #111, #000);
+  color: #fff;
+  border: none;
+}
+
+.auth-card button[type="submit"]:hover {
+  background: linear-gradient(180deg, #000, #000);
+}
+
+/* ===== Resend OTP ===== */
+.resend-btn {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.resend-btn:hover {
+  text-decoration: underline;
+}
+
   </style>
 </head>
 

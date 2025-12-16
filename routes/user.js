@@ -97,6 +97,7 @@ router.post('/signup', async (req, res) => {
     });
 
     req.session.verifyEmail = user.email;
+    req.session.verifyPurpose = 'signup';
     return res.redirect('/user/verify');
   } catch (err) {
     console.error(err);
