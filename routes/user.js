@@ -32,6 +32,7 @@ router.post('/signin', async (req, res) => {
 
     if (!user.isEmailVerified) {
       req.session.verifyEmail = user.email;
+      req.session.verifyPurpose = 'signup';
       return req.session.save(() => {
         res.redirect('/user/verify');
       });
