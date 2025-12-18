@@ -191,9 +191,14 @@ router.post(
 router.get('/profile/:id', async (req, res) => {
   try {
     const userId = req.params.id;
+
     const user = await User.findById(userId);
+    if (!user) return res.redirect('/');
+
     const blogs = await Blog.find({ createdBy: userId });
-    const comments = await Comment.find({ createdBy: userId }).populate('blogId', 'title');
+    const comments = await Comment
+      .find({ createdBy: userId })
+      .populate('blogId', 'title');
 
     const formattedComments = comments.map(comment => ({
       content: comment.content,
@@ -201,11 +206,19 @@ router.get('/profile/:id', async (req, res) => {
       blogTitle: comment.blogId?.title || 'Deleted Blog',
     }));
 
+    let isFollowing = false;
+    if (req.user) {
+      isFollowing = user.followers.some(
+        id => id.toString() === req.user._id.toString()
+      );
+    }
+
     return res.render('profile', {
       user: req.user,
       profileUser: user,
       blogs,
       comments: formattedComments,
+      isFollowing, 
     });
   } catch (err) {
     console.error('Profile route error:', err);
@@ -261,7 +274,7 @@ router.get('/verify', async (req, res) => {
   const user = await User.findOne({ email });
   if (!user) return res.redirect('/user/signup');
 
-  // 🚨 Only block if purpose is signup
+  // Only block if purpose is signup
   if (purpose === 'signup' && user.isEmailVerified) {
     return res.redirect('/');
   }
@@ -321,7 +334,7 @@ router.post('/verify', async (req, res) => {
     user.emailVerificationOTP = undefined;
     user.emailVerificationExpiry = undefined;
 
-    // 🔀 FLOW CONTROL
+    //  FLOW CONTROL
     if (purpose === 'signup') {
       user.isEmailVerified = true;
       await user.save();

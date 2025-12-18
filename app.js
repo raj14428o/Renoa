@@ -12,6 +12,7 @@ const { checkForAuthenthicationCookie } = require('./middlewares/authentication'
 const Blog = require('./Models/blog');
 const UserRoute = require("./routes/user");
 const BlogRoute = require("./routes/blog");
+const followApiRoutes = require("./routes/follow");
 
 const app = express();
 const PORT = process.env.PORT;
@@ -82,6 +83,7 @@ app.get('/', async (req, res) => {
 });
 
 /* ================= ROUTES ================= */
+app.use("/api", followApiRoutes);
 app.use('/user', UserRoute);
 app.use('/blog', BlogRoute);
 
