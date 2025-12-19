@@ -318,7 +318,7 @@
 
     <!-- Comments -->
     <div class="comments-wrapper">
-      <h3>Comments (<%= comments.length %>)</h3>
+      <h3>Comments  (<span id="commentCount"><%= comments.length %></span>)</h3>
 
       <% if (user) { %>
         <form action="/blog/comment/<%= blog._id %>" method="post">
@@ -327,7 +327,7 @@
         </form>
       <% } %>
 
-      <div class="mt-4">
+      <div class="mt-4" id="commentsList">
         <% comments.forEach(c => { %>
           <div class="comment">
             <a href="/user/profile/<%= c.createdBy._id %>">
@@ -343,8 +343,6 @@
               </div>
             </div>
           </div>
-      
-
         <% }) %>
       </div>
       <div id="coverModal" class="image-modal" onclick="closeCoverModal()">
@@ -352,8 +350,11 @@
 </div>
 
      <%- include('./partials/scripts') %>
+     <script src="/socket.io/socket.io.js"></script>
+
   </body>
   <script>
+
 function openCoverModal(src) {
   document.getElementById("coverModalImg").src = src;
   document.getElementById("coverModal").style.display = "flex";
@@ -362,6 +363,42 @@ function openCoverModal(src) {
 function closeCoverModal() {
   document.getElementById("coverModal").style.display = "none";
 }
+
+ const socket = io();
+  const BLOG_ID = "<%= blog._id %>";
+
+  // join this blog's room
+  socket.on("connect", () => {
+  socket.emit("join-blog", BLOG_ID);
+});
+
+  socket.on("new-comment", (comment) => {
+    appendComment(comment);
+    const countEl = document.getElementById("commentCount");
+   countEl.textContent = Number(countEl.textContent) + 1;
+  });
+
+  function appendComment(comment) {
+    const div = document.createElement("div");
+    div.className = "comment";
+
+    div.innerHTML = `
+      <a href="/user/profile/${comment.userId}">
+        <img src="${comment.userAvatar}" class="comment-avatar">
+      </a>
+
+      <div class="comment-box">
+        <a href="/user/profile/${comment.userId}" class="comment-author">
+          ${comment.userName}
+        </a>
+        <div class="comment-content">
+          ${comment.content}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("commentsList").prepend(div);
+  }
 </script>
 
 </html>

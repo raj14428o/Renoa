@@ -2,6 +2,7 @@ const {Router} = require('express')
 const router = Router();
 const multer = require('multer');
 const path = require('path');
+const User = require('../Models/user')
 const Blog = require('../Models/blog')
 const Comment = require('../Models/comments')
 const fs = require('fs');
@@ -23,20 +24,35 @@ router.post('/comment/:blogId',async (req,res)=>
       blogId : req.params.blogId,
       createdBy : req.user._id,
     }
-  )
+  );
+  const user = await User.findById(req.user._id).select("fullName");
+  const io = req.app.get("io");
+  const blogId = req.params.blogId;
+  io.to(blogId).emit("new-comment", {
+  content: comment.content,
+  userId: req.user._id,
+  userName: user.fullName,
+  userAvatar: req.user.profileImageUrl
+});
   return res.redirect(`/blog/${req.params.blogId}`)
 })
 
-router.get('/:Id', async (req,res)=>
-{
-   const blog= await Blog.findById(req.params.Id).populate('createdBy'); 
-   const comments = await Comment.find({blogId : req.params.Id}).populate('createdBy');
-   return res.render("blog",
-   {user:req.user,
+router.get('/:Id', async (req, res) => {
+  const blog = await Blog.findById(req.params.Id)
+    .populate('createdBy')
+    .lean();
+
+  const comments = await Comment.find({ blogId: req.params.Id })
+    .populate('createdBy')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.render("blog", {
+    user: req.user,
     blog,
-  comments}
-   )
-})
+    comments
+  });
+});
 
 router.delete('/:id', async (req, res) => {
   try {

@@ -1,10 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const http = require("http");
 const methodOverride = require('method-override');
 const path = require('path');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const { Server } = require("socket.io");
+
 
 const attachUser = require('./middlewares/attachUser');
 const { checkForAuthenthicationCookie } = require('./middlewares/authentication');
@@ -16,6 +19,26 @@ const followApiRoutes = require("./routes/follow");
 
 const app = express();
 const PORT = process.env.PORT;
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
+});
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join-blog", (blogId) => {
+    socket.join(blogId);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+app.set("io", io);
 
 /* ================= DB ================= */
 mongoose.connect(process.env.MONGO_URL)
@@ -88,7 +111,7 @@ app.use('/user', UserRoute);
 app.use('/blog', BlogRoute);
 
 /* ================= START ================= */
-app.listen(PORT, () => {
-  console.log(`Server started at ${PORT}`);
-});
 
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
