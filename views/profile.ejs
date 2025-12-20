@@ -213,38 +213,40 @@
         font-weight: 500;
       }
 
-     /* Scroll ONLY content, not titles */
-.blogs-scroll,
-.comments-scroll {
-  max-height: calc(100vh - 330px);
-  overflow-y: auto;
-  padding-right: 6px;
-  scroll-behavior: smooth;
-}
+      /* Scroll ONLY content, not titles */
+      .blogs-scroll,
+      .comments-scroll {
+        max-height: calc(100vh - 330px);
+        overflow-y: auto;
+        padding-right: 6px;
+        scroll-behavior: smooth;
+      }
 
-/* Sticky titles */
-.blogs-section .section-title,
-.comments-section .section-title {
-  position: sticky;
-  top: 0;
-  background: #ffffff;
-  z-index: 10;
-  padding: 0.6rem 0;
-}
+      /* Sticky titles */
+      .blogs-section .section-title,
+      .comments-section .section-title {
+        position: sticky;
+        top: 0;
+        background: #ffffff;
+        z-index: 10;
+        padding: 0.6rem 0;
+      }
 
-/* Hide scrollbar (but allow scrolling) */
-.blogs-scroll::-webkit-scrollbar,
-.comments-scroll::-webkit-scrollbar {
-  width: 0px;
-}
+      /* Hide scrollbar (but allow scrolling) */
+      .blogs-scroll::-webkit-scrollbar,
+      .comments-scroll::-webkit-scrollbar {
+        width: 0px;
+      }
 
-.blogs-scroll {
-  scrollbar-width: none; /* Firefox */
-}
+      .blogs-scroll {
+        scrollbar-width: none;
+        /* Firefox */
+      }
 
-.comments-scroll {
-  scrollbar-width: none; /* Firefox */
-}
+      .comments-scroll {
+        scrollbar-width: none;
+        /* Firefox */
+      }
 
 
       @media (max-width: 500px) {
@@ -428,77 +430,77 @@
 
         <div class="row g-5">
 
-      <!-- POSTS -->
-<div class="col-md-7">
-  <div class="content-section blogs-section">
-    <div class="section-title">Posts</div>
+          <!-- POSTS -->
+          <div class="col-md-7">
+            <div class="content-section blogs-section">
+              <div class="section-title">Posts</div>
 
-    <div class="blogs-scroll">
-      <% if (blogs.length === 0) { %>
-        <p class="text-muted">No posts published yet.</p>
-      <% } else { %>
-        <% blogs.forEach(blog => { %>
-          <div class="profile-blog-card">
-            <img src="<%= blog.coverImageURL %>" alt="Cover">
-            <div>
-              <a href="/blog/<%= blog._id %>">
-                <%= blog.title %>
-              </a>
-              <div class="text-muted small">
-                <%= blog.createdAt.toDateString() %>
+              <div class="blogs-scroll">
+                <% if (blogs.length===0) { %>
+                  <p class="text-muted">No posts published yet.</p>
+                  <% } else { %>
+                    <% blogs.forEach(blog=> { %>
+                      <div class="profile-blog-card">
+                        <img src="<%= blog.coverImageURL %>" alt="Cover">
+                        <div>
+                          <a href="/blog/<%= blog._id %>">
+                            <%= blog.title %>
+                          </a>
+                          <div class="text-muted small">
+                            <%= blog.createdAt.toDateString() %>
+                          </div>
+                        </div>
+                      </div>
+                      <% }) %>
+                        <% } %>
               </div>
+
             </div>
           </div>
-        <% }) %>
-      <% } %>
-    </div>
-
-  </div>
-</div>
 
 
 
           <!-- 💬 COMMENTS -->
-<div class="col-md-5">
-  <div class="content-section comments-section">
-    <div class="section-title">Comments</div>
+          <div class="col-md-5">
+            <div class="content-section comments-section">
+              <div class="section-title">Comments</div>
 
-    <div class="comments-scroll">
-      <% if (comments.length === 0) { %>
-        <p class="text-muted">No comments posted yet.</p>
-      <% } else { %>
-        <% comments.forEach(comment => { %>
-          <div class="comment-item">
-            <div class="small text-muted mb-1">
-              On
-              <a href="/blog/<%= comment.blogId %>" class="text-decoration-none">
-                <%= comment.blogTitle %>
-              </a>
-            </div>
-            <div>
-              <%= comment.content %>
+              <div class="comments-scroll">
+                <% if (comments.length===0) { %>
+                  <p class="text-muted">No comments posted yet.</p>
+                  <% } else { %>
+                    <% comments.forEach(comment=> { %>
+                      <div class="comment-item">
+                        <div class="small text-muted mb-1">
+                          On
+                          <a href="/blog/<%= comment.blogId %>" class="text-decoration-none">
+                            <%= comment.blogTitle %>
+                          </a>
+                        </div>
+                        <div>
+                          <%= comment.content %>
+                        </div>
+                      </div>
+                      <% }) %>
+                        <% } %>
+              </div>
+
             </div>
           </div>
-        <% }) %>
-      <% } %>
-    </div>
 
-  </div>
-</div>
-
-    <div id="avatarModal" class="avatar-modal" onclick="closeAvatarModal()">
-      <img id="avatarModalImg" alt="Profile preview">
-    </div>
-    <div id="followModal" class="avatar-modal">
-      <div style="background:#fff; width:520px; max-height:70vh; overflow:auto; border-radius:14px; padding:20px">
-        <h4 id="modalTitle"></h4>
-        <div id="followList"></div>
-      </div>
-    </div>
+          <div id="avatarModal" class="avatar-modal" onclick="closeAvatarModal()">
+            <img id="avatarModalImg" alt="Profile preview">
+          </div>
+          <div id="followModal" class="avatar-modal">
+            <div style="background:#fff; width:520px; max-height:70vh; overflow:auto; border-radius:14px; padding:20px">
+              <h4 id="modalTitle"></h4>
+              <div id="followList"></div>
+            </div>
+          </div>
 
 
-    <%- include('./partials/scripts') %>
-      <%- include("./partials/socket") %>
+          <%- include('./partials/scripts') %>
+            <%- include("./partials/socket") %>
 
 </body>
 <script>
