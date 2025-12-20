@@ -7,7 +7,8 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const { Server } = require("socket.io");
-
+const onlineUsers = new Map();
+const offlineTimers = new Map(); 
 
 const attachUser = require('./middlewares/attachUser');
 const { checkForAuthenthicationCookie } = require('./middlewares/authentication');
@@ -16,6 +17,7 @@ const Blog = require('./Models/blog');
 const UserRoute = require("./routes/user");
 const BlogRoute = require("./routes/blog");
 const followApiRoutes = require("./routes/follow");
+const MessageRoute = require("./routes/message");
 
 const app = express();
 const PORT = process.env.PORT;
@@ -26,16 +28,61 @@ const io = new Server(server, {
     origin: "*"
   }
 });
+
+io.use((socket, next) => {
+  const userId = socket.handshake.auth?.userId;
+  if (!userId) {
+    return next(new Error("Unauthorized socket"));
+  }
+  socket.userId = userId;
+  next();
+});
+
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  const userId = socket.userId;
+
+   // ---- ADD SOCKET ----
+  if (!onlineUsers.has(userId)) {
+    onlineUsers.set(userId, new Set());
+    io.emit("user-online", userId); 
+  }
+
+  onlineUsers.get(userId).add(socket.id);
+  console.log("User online:", userId);
+
+
+  socket.on("get-online-users", () => {
+    socket.emit("online-users", Array.from(onlineUsers.keys()));
+  });
 
   socket.on("join-blog", (blogId) => {
     socket.join(blogId);
   });
-
+  
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+  const sockets = onlineUsers.get(userId);
+  if (!sockets) return;
+
+  sockets.delete(socket.id);
+
+  // If user still has active sockets → do nothing
+  if (sockets.size > 0) return;
+
+  // Delay offline emit to avoid flicker
+  const timer = setTimeout(() => {
+    // Check again after delay
+    const stillSockets = onlineUsers.get(userId);
+    if (stillSockets && stillSockets.size > 0) return;
+
+    onlineUsers.delete(userId);
+    io.emit("user-offline", userId);
+    offlineTimers.delete(userId);
+  }, 500); // 👈 300–500ms sweet spot
+
+  offlineTimers.set(userId, timer);
+});
+
+  
 });
 
 app.set("io", io);
@@ -109,6 +156,7 @@ app.get('/', async (req, res) => {
 app.use("/api", followApiRoutes);
 app.use('/user', UserRoute);
 app.use('/blog', BlogRoute);
+app.use("/messages", MessageRoute);
 
 /* ================= START ================= */
 

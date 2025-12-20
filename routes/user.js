@@ -98,6 +98,14 @@ router.post(
       const token = createTokenForUser(user.toObject());
       res.cookie("token", token);
 
+      const io = req.app.get("io");
+
+io.emit("user-updated", {
+  userId: user._id.toString(),
+  fullName: user.fullName,
+  profileImageUrl: user.profileImageUrl
+});
+
       res.redirect(`/user/profile/${user._id}`);
     } catch (err) {
       console.error("Edit profile image error:", err);
@@ -125,7 +133,14 @@ router.post(
    
       const token = createTokenForUser(user.toObject());
       res.cookie("token", token);
+       
+      const io = req.app.get("io");
 
+io.emit("user-updated", {
+  userId: user._id.toString(),
+  fullName: user.fullName,
+  profileImageUrl: user.profileImageUrl
+});
       res.redirect(`/user/profile/${user._id}`);
     } catch (err) {
       console.error("Edit name error:", err);

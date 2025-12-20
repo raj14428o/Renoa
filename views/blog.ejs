@@ -350,7 +350,7 @@
 </div>
 
      <%- include('./partials/scripts') %>
-     <script src="/socket.io/socket.io.js"></script>
+     <%- include("./partials/socket") %>
 
   </body>
   <script>
@@ -364,7 +364,7 @@ function closeCoverModal() {
   document.getElementById("coverModal").style.display = "none";
 }
 
- const socket = io();
+ const socket = window.appSocket;
   const BLOG_ID = "<%= blog._id %>";
 
   // join this blog's room

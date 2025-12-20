@@ -1,0 +1,165 @@
+<style>
+  .messages-page {
+    max-width: 420px;
+    margin: 20px auto;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  .online-users,
+  .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    color: #666;
+    margin: 10px 0 6px;
+  }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  .user-item:hover {
+    background: #f2f2f2;
+  }
+
+  .user-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .user-item.online {
+    border-left: 4px solid green;
+    background: #f6fff6;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+
+<div class="messages-page">
+
+  <!-- Search -->
+  <div class="search-box">
+    <input type="text" id="userSearch" placeholder="Search users..." />
+  </div>
+
+  <!-- Online users -->
+  <div class="section-title">Online</div>
+  <div class="online-users" id="onlineUsers"></div>
+
+  <!-- All users -->
+  <div class="section-title">All users</div>
+  <div class="user-list" id="userList">
+    <% following.forEach(u => { %>
+      <div class="user-item"
+           data-id="<%= u._id %>"
+           data-name="<%= u.fullName.toLowerCase() %>">
+
+        <img src="<%= u.profileImageUrl %>" />
+        <span><%= u.fullName %></span>
+      </div>
+    <% }) %>
+  </div>
+
+</div>
+<%- include("./partials/socket") %>
+<script>
+  const socket = window.appSocket;
+
+  const userItems = Array.from(document.querySelectorAll(".user-item"));
+  const onlineContainer = document.getElementById("onlineUsers");
+  const allUsersContainer = document.getElementById("userList");
+  const searchInput = document.getElementById("userSearch");
+
+  // -----------------------------
+  // INITIAL SNAPSHOT
+  // -----------------------------
+  socket.emit("get-online-users");
+
+socket.on("user-updated", ({ userId, fullName, profileImageUrl }) => {
+ 
+  const item = document.querySelector(`.user-item[data-id="${userId}"]`);
+  if (!item) return;
+
+  item.querySelector("span").innerText = fullName + "?v=" + Date.now();
+ item.querySelector("img").src = profileImageUrl + "?v=" + Date.now();
+
+});
+
+ socket.on("online-users", (onlineIds) => {
+  const onlineSet = new Set(onlineIds);
+
+  userItems.forEach(item => {
+    const shouldBeOnline = onlineSet.has(item.dataset.id);
+    const isOnline = item.classList.contains("online");
+
+    if (shouldBeOnline && !isOnline) {
+      item.classList.add("online");
+      onlineContainer.appendChild(item);
+    }
+
+    if (!shouldBeOnline && isOnline) {
+      item.classList.remove("online");
+      allUsersContainer.appendChild(item);
+    }
+  });
+});
+
+
+  // -----------------------------
+  // LIVE PRESENCE UPDATES
+  // -----------------------------
+  socket.on("user-online", (userId) => {
+    const item = document.querySelector(`.user-item[data-id="${userId}"]`);
+    if (!item || item.classList.contains("online")) return;
+
+    item.classList.add("online");
+    onlineContainer.appendChild(item);
+  });
+
+  socket.on("user-offline", (userId) => {
+    const item = document.querySelector(`.user-item[data-id="${userId}"]`);
+    if (!item) return;
+
+    item.classList.remove("online");
+    allUsersContainer.appendChild(item);
+  });
+
+  // -----------------------------
+  // SEARCH
+  // -----------------------------
+  searchInput.addEventListener("input", (e) => {
+    const value = e.target.value.toLowerCase();
+
+    userItems.forEach(item => {
+      item.style.display =
+        item.dataset.name.includes(value) ? "flex" : "none";
+    });
+  });
+
+  // -----------------------------
+  // NAVIGATE TO CHAT
+  // -----------------------------
+  userItems.forEach(item => {
+    item.addEventListener("click", () => {
+      window.location.href = `/messages/${item.dataset.id}`;
+    });
+  });
+</script> 
+

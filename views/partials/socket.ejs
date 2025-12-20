@@ -1,0 +1,21 @@
+<% if (user) { %>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Global presence socket (ONE per user)
+    if (!window.appSocket) {
+      window.appSocket = io({
+        auth: {
+          userId: "<%= user._id %>"
+        }
+      });
+
+      window.appSocket.on("connect", () => {
+        console.log("Presence socket connected");
+      });
+
+      window.appSocket.on("disconnect", () => {
+        console.log("Presence socket disconnected");
+      });
+    }
+  </script>
+<% } %>
