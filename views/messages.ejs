@@ -126,6 +126,7 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
+  height: 95%;  
 }
 
 
@@ -137,8 +138,14 @@
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
   padding: 20px;
-  min-height: 70vh;
+
+
+  display: flex;
+  flex-direction: column;
+  height: 95%;          
+  overflow: hidden;    
 }
+
 
 .chat-empty {
   height: 100%;
@@ -294,7 +301,8 @@
   <% following.forEach(u => { %>
     <div class="user-item"
          data-id="<%= u._id %>"
-         data-name="<%= u.fullName.toLowerCase() %>">
+         data-name="<%= u.fullName.toLowerCase() %>"
+          onclick="openChat('<%= u._id %>')">
       <img src="<%= u.profileImageUrl %>" />
       <span><%= u.fullName %></span>
     </div>
@@ -305,18 +313,21 @@
 
 <!-- RIGHT PANEL -->
   <div class="messages-right">
-    <div class="mobile-topbar">
-  <button id="openSidebar" class="icon-btn">☰</button>
-  <input type="text" id="topUserSearch" placeholder="Search users..." />
-</div>
+  <div class="mobile-topbar">
+    <button id="openSidebar" class="icon-btn">☰</button>
+    <input type="text" id="topUserSearch" placeholder="Search users..." />
+  </div>
 
+  <% if (!roomId) { %>
     <div class="chat-empty">
       <h3>Select a conversation</h3>
       <p>Choose a user to start chatting</p>
     </div>
-  </div>
-
+  <% } else { %>
+    <%- include("./partials/chat-box", { chatUser, roomId }) %>
+  <% } %>
 </div>
+
 
 <!-- Search Backdrop -->
 <div id="searchBackdrop" class="hidden">
@@ -429,11 +440,6 @@ item.querySelector("img").src =
   // -----------------------------
   // NAVIGATE TO CHAT
   // -----------------------------
-  userItems.forEach(item => {
-    item.addEventListener("click", () => {
-      window.location.href = `/messages/${item.dataset.id}`;
-    });
-  });
 const searchBackdrop = document.getElementById("searchBackdrop");
 const searchResults = document.getElementById("searchResults");
 const showMoreBtn = document.getElementById("showMoreBtn");
@@ -452,7 +458,9 @@ function openSearchModal(users) {
         <span>${u.fullName}</span>
       `;
       div.onclick = () => {
-        window.location.href = `/messages/${u._id}`;
+         const myId = "<%= user._id %>";
+  const roomId = [myId, u._id].sort().join("_");
+  window.location.href = `/messages/room/${roomId}`;
       };
       searchResults.appendChild(div);
     });
@@ -492,6 +500,47 @@ backdrop.addEventListener("click", () => {
   sidebar.classList.remove("open");
   backdrop.classList.add("hidden");
 });
+
+function openChat(otherUserId) {
+  const myId = "<%= user._id %>";
+  const roomId = [myId, otherUserId].sort().join("_");
+  window.location.href = `/messages/room/${roomId}`;
+}
+
+const activeChatUserId = <%- JSON.stringify(chatUser ? chatUser._id : null) %>;
+
+function updateChatHeaderStatus(text, isOnline = false) {
+  const chatBox = document.querySelector(".chat-box");
+  const statusEl = chatBox?.querySelector(".chat-status");
+
+  if (!statusEl) return;
+
+  statusEl.innerText = text;
+
+  if (isOnline) {
+    statusEl.classList.add("online");     
+  } else {
+    statusEl.classList.remove("online");  
+  }
+}
+
+socket.on("user-online", (userId) => {
+  if (!activeChatUserId) return;
+  if (userId === activeChatUserId) {
+    updateChatHeaderStatus("Online");
+  }
+});
+socket.on("user-last-seen", ({ userId, lastSeen }) => {
+  if (!activeChatUserId) return;
+  if (userId === activeChatUserId) {
+    const time = new Date(lastSeen).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    updateChatHeaderStatus(`Last seen at ${time}`);
+  }
+});
+
 
 </script> 
 

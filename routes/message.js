@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../Models/user");
-
+const getRoomId = require("../utils/chatroom");
 // Messages list page
 router.get("/", async (req, res) => {
   if (!req.user) return res.redirect("/user/signin");
@@ -11,13 +11,46 @@ router.get("/", async (req, res) => {
     .lean();
 
   res.render("messages", {
-    following: user.following,   //  IMPORTANT
-    user: req.user
+    following: user.following, 
+    user: req.user,
+    roomId: null,   
+    chatUser: null ,
   });
 });
 
 
 // Individual chat page
+router.get("/room/:roomId", async (req, res) => {
+  if (!req.user) return res.redirect("/user/signin");
+
+  const { roomId } = req.params;
+
+  const ids = roomId.split("_");
+  if (ids.length !== 2) {
+    return res.redirect("/messages");
+  }
+
+  const otherUserId =
+    ids[0] === req.user._id.toString() ? ids[1] : ids[0];
+
+  const otherUser = await User.findById(otherUserId)
+    .select("_id fullName profileImageUrl isOnline lastSeen")
+    .lean();
+
+  if (!otherUser) return res.redirect("/messages");
+
+  // reuse messages page → right pane chat
+  const user = await User.findById(req.user._id)
+    .populate("following", "_id fullName profileImageUrl")
+    .lean();
+
+  res.render("messages", {
+    following: user.following,
+    user: req.user,
+    roomId,
+    chatUser: otherUser
+  });
+});
 
 //search users to message
 router.get("/search", async (req, res) => {
@@ -40,22 +73,6 @@ router.get("/search", async (req, res) => {
 
   res.json({ users });
 });
-
-router.get("/:userId", async (req, res) => {
-  if (!req.user) return res.redirect("/user/signin");
-
-  const otherUser = await User.findById(req.params.userId)
-    .select("_id fullName profileImageUrl")
-    .lean();
-
-  if (!otherUser) return res.redirect("/messages");
-
-  res.render("chat", {
-    otherUser,
-    user: req.user
-  });
-});
-
 
 
 module.exports = router;

@@ -9,6 +9,7 @@ const session = require('express-session');
 const { Server } = require("socket.io");
 const onlineUsers = new Map();
 const offlineTimers = new Map(); 
+const User = require("./Models/user");
 
 const attachUser = require('./middlewares/attachUser');
 const { checkForAuthenthicationCookie } = require('./middlewares/authentication');
@@ -38,18 +39,32 @@ io.use((socket, next) => {
   next();
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   const userId = socket.userId;
 
-   // ---- ADD SOCKET ----
+  // Cancel pending offline timer if reconnecting
+  if (offlineTimers.has(userId)) {
+    clearTimeout(offlineTimers.get(userId));
+    offlineTimers.delete(userId);
+  }
+
+  // First active socket for this user
   if (!onlineUsers.has(userId)) {
     onlineUsers.set(userId, new Set());
-    io.emit("user-online", userId); 
+
+    try {
+      await User.findByIdAndUpdate(userId, {
+        isOnline: true
+      });
+    } catch (err) {
+      console.error("Failed to set user online:", err);
+    }
+
+    io.emit("user-online", userId);
   }
 
   onlineUsers.get(userId).add(socket.id);
   console.log("User online:", userId);
-
 
   socket.on("get-online-users", () => {
     socket.emit("online-users", Array.from(onlineUsers.keys()));
@@ -58,31 +73,41 @@ io.on("connection", (socket) => {
   socket.on("join-blog", (blogId) => {
     socket.join(blogId);
   });
-  
+
   socket.on("disconnect", () => {
-  const sockets = onlineUsers.get(userId);
-  if (!sockets) return;
+    const sockets = onlineUsers.get(userId);
+    if (!sockets) return;
 
-  sockets.delete(socket.id);
+    sockets.delete(socket.id);
 
-  // If user still has active sockets → do nothing
-  if (sockets.size > 0) return;
+    // Still has other tabs open
+    if (sockets.size > 0) return;
 
-  // Delay offline emit to avoid flicker
-  const timer = setTimeout(() => {
-    // Check again after delay
-    const stillSockets = onlineUsers.get(userId);
-    if (stillSockets && stillSockets.size > 0) return;
+    const timer = setTimeout(async () => {
+      try {
+        const stillSockets = onlineUsers.get(userId);
+        if (stillSockets && stillSockets.size > 0) return;
 
-    onlineUsers.delete(userId);
-    io.emit("user-offline", userId);
-    offlineTimers.delete(userId);
-  }, 500); // 👈 300–500ms sweet spot
+        onlineUsers.delete(userId);
 
-  offlineTimers.set(userId, timer);
-});
+        const lastSeen = new Date();
 
-  
+        await User.findByIdAndUpdate(userId, {
+          isOnline: false,
+          lastSeen
+        });
+
+        io.emit("user-offline", userId);
+        io.emit("user-last-seen", { userId, lastSeen });
+
+        offlineTimers.delete(userId);
+      } catch (err) {
+        console.error("Disconnect presence update failed:", err);
+      }
+    }, 500);
+
+    offlineTimers.set(userId, timer);
+  });
 });
 
 app.set("io", io);

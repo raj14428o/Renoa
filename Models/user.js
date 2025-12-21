@@ -68,6 +68,15 @@ const userSchema = new Schema(
                 default: []
             }
         ],
+        isOnline: {
+            type: Boolean,
+            default: false
+        },
+
+        lastSeen: {
+            type: Date,
+            default: null
+        },
         isEmailVerified: {
   type: Boolean,
   default: false

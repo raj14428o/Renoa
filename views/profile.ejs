@@ -343,6 +343,14 @@
       .row.g-5 {
         --bs-gutter-x: 0;
       }
+      a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;   /* removes underline */
+  line-height: normal;     /* fixes vertical alignment */
+}
+
     </style>
 </head>
 
@@ -394,9 +402,13 @@
                       </button>
 
 
-                      <button class="btn btn-outline-secondary">
+                      <a href="/messages/room/<%= 
+                        [user._id.toString(), profileUser._id.toString()]
+                          .sort()
+                          .join('_')
+                      %>" class="btn btn-outline-secondary">
                         Message
-                      </button>
+                      </a>
 
                       <% } %>
 
