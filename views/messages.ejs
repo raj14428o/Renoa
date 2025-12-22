@@ -110,7 +110,7 @@ async function generateKeyPair() {
   const keyPair = await crypto.subtle.generateKey(
     {
       name: "ECDH",
-      namedCurve: "P-256",   // ✅ browser-supported
+      namedCurve: "P-256",   //  browser-supported
     },
     true,
     ["deriveKey", "deriveBits"]
@@ -122,6 +122,31 @@ async function generateKeyPair() {
   };
 }
 
+let deviceKeyPromise = null;
+
+async function initDeviceKeys() {
+  if (deviceKeyPromise) return deviceKeyPromise;
+
+  deviceKeyPromise = (async () => {
+    let keys = await getStoredKeys();
+    if (!keys) {
+      const deviceId = crypto.randomUUID();
+      const { publicKey, privateKey } = await generateKeyPair();
+      keys = { deviceId, publicKey, privateKey };
+      await saveKeys(keys);
+
+      await fetch("/api/devices/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, publicKey }),
+      });
+    }
+    window.deviceKeys = keys;
+    return keys;
+  })();
+
+  return deviceKeyPromise;
+}
 
 // MAIN initializer
 async function initDeviceKeys() {
@@ -150,9 +175,18 @@ async function initDeviceKeys() {
   window.deviceKeys = keys;
 }
 
-(async () => {
+window.messagingReady = (async () => {
   await initDeviceKeys();
+
+
+  if (activeChatUserId) {
+    window.sharedSecret = await deriveSharedSecret(activeChatUserId);
+    socket.emit("join-room", "<%= roomId %>");
+  }
+
+  return true;
 })();
+
 
 async function importPrivateKey(jwk) {
   return crypto.subtle.importKey(
@@ -397,18 +431,7 @@ socket.on("user-last-seen", ({ userId, lastSeen }) => {
     updateChatHeaderStatus(`Last seen at ${time}`);
   }
 });
-let sharedSecret = null;
-
-(async () => {
-  if (!activeChatUserId) return;
-
-  try {
-    sharedSecret = await deriveSharedSecret(activeChatUserId);
-    console.log("🔐 Shared secret derived", sharedSecret);
-  } catch (err) {
-    console.error("Shared secret error:", err);
-  }
-})();
+window.sharedSecret = null;
 
 //encryption and decryption functions
 
@@ -471,6 +494,9 @@ window.decryptMessage = decryptMessage;
 
 
 </script> 
+<script>
+  window.roomId = "<%= roomId %>";
+</script>
 
 <script src="/js/chatCrypto.js"></script>
 

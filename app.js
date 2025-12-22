@@ -73,6 +73,21 @@ io.on("connection", async (socket) => {
     socket.join(blogId);
   });
 
+    // JOIN CHAT ROOM
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${userId} joined room ${roomId}`);
+  });
+
+  // RECEIVE MESSAGE FROM SENDER
+  socket.on("send-message", ({ roomId, messageId, ciphertext, nonce }) => {
+    // Forward to everyone else in the room
+    socket.to(roomId).emit("receive-message", {
+      messageId,
+      ciphertext,
+      nonce,
+    });
+  });
   socket.on("disconnect", () => {
     const sockets = onlineUsers.get(userId);
     if (!sockets) return;

@@ -14,7 +14,7 @@ const deviceSchema = new Schema(
     },
 
     publicKey: {
-      type: Object, // JWK
+      type: Object, 
       required: true,
     },
 
