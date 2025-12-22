@@ -432,7 +432,7 @@ window.sharedSecret = null;
 async function deriveAESKey(sharedSecret) {
   return crypto.subtle.importKey(
     "raw",
-    sharedSecret,               // ArrayBuffer from ECDH
+    sharedSecret,              
     { name: "AES-GCM" },
     false,
     ["encrypt", "decrypt"]
@@ -490,6 +490,7 @@ window.decryptMessage = decryptMessage;
 </script> 
 <script>
   window.roomId = "<%= roomId %>";
+  window.myUserId = "<%= user._id %>";
 </script>
 
 <script src="/js/chatCrypto.js"></script>

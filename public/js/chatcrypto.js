@@ -1,9 +1,16 @@
-console.log("chatCrypto.js loaded");
+console.log("📦 chatCrypto.js loaded");
+// ------------------------------------------------
+  // MESSAGE STATES
+  // ------------------------------------------------
+  const MESSAGE_STATE = {
+    PENDING: "pending",
+    SENT: "sent",
+  };
 
 document.addEventListener("DOMContentLoaded", async () => {
 
   // ------------------------------------------------
-  // HARD GATE — wait for crypto + keys + room join
+  // HARD GATE
   // ------------------------------------------------
   if (!window.messagingReady) {
     console.error("messagingReady promise not found");
@@ -12,9 +19,51 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await window.messagingReady;
 
-  console.log("Messaging fully ready");
-  console.log("sharedSecret:", window.sharedSecret);
-  console.log("roomId:", window.roomId);
+  const myUserId = window.myUserId; // MUST be set in EJS
+  const roomId = window.roomId;
+
+  if (!roomId || !myUserId) {
+    console.error("roomId or myUserId missing");
+    return;
+  }
+
+  // ------------------------------------------------
+  // LOAD MESSAGE HISTORY
+  // ------------------------------------------------
+  async function loadMessages() {
+    const res = await fetch(`/messages/${roomId}`);
+    if (!res.ok) {
+      console.error("Failed to load messages");
+      return;
+    }
+
+    const encryptedMessages = await res.json();
+
+    for (const msg of encryptedMessages) {
+      try {
+        const text = await window.decryptMessage(
+          msg.ciphertext,
+          msg.nonce,
+          window.sharedSecret
+        );
+
+        renderMessage({
+          id: msg._id,
+          text,
+          sender: msg.sender === myUserId ? "me" : "them",
+          state: "sent",
+          timestamp: msg.createdAt,
+        });
+      } catch (err) {
+        console.error(" Failed to decrypt message", err);
+      }
+    }
+  }
+
+  await loadMessages();
+
+  console.log("Messaging ready");
+  console.log("roomId:", roomId);
 
   // ------------------------------------------------
   // SAFETY CHECKS
@@ -24,65 +73,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  if (typeof window.encryptMessage !== "function") {
-    console.error("encryptMessage missing");
+  if (typeof window.encryptMessage !== "function" ||
+      typeof window.decryptMessage !== "function") {
+    console.error("crypto helpers missing");
     return;
   }
 
-  if (typeof window.decryptMessage !== "function") {
-    console.error("decryptMessage missing");
-    return;
-  }
-
+  
   // ------------------------------------------------
-  // MESSAGE STATES
-  // ------------------------------------------------
-  const MESSAGE_STATE = {
-    PENDING: "pending",
-    SENT: "sent",
-  };
-
-  // ------------------------------------------------
-  // SEND MESSAGE (race-free)
+  // SEND MESSAGE
   // ------------------------------------------------
   async function sendMessage(text) {
     if (!text) return;
 
-    const messageId = crypto.randomUUID();
+    const tempId = crypto.randomUUID();
 
-    // Optimistic UI
     renderMessage({
-      id: messageId,
+      id: tempId,
       text,
       sender: "me",
       state: MESSAGE_STATE.PENDING,
       timestamp: Date.now(),
     });
 
-    try {
-      // GUARANTEE key exists
-      if (!window.sharedSecret) {
-        console.warn("⏳ Waiting for shared secret...");
-        await window.messagingReady;
-      }
+    await window.messagingReady;
 
-      //  Encrypt
+    try {
       const { ciphertext, nonce } =
         await window.encryptMessage(text, window.sharedSecret);
 
-      //  Emit
       window.appSocket.emit("send-message", {
-        roomId: window.roomId,
-        messageId,
+        roomId,
         ciphertext,
         nonce,
       });
 
-      //  Mark sent
-      updateMessageState(messageId, MESSAGE_STATE.SENT);
-
+      updateMessageState(tempId, MESSAGE_STATE.SENT);
     } catch (err) {
-      console.error(" Send failed:", err);
+      console.error("Send failed:", err);
     }
   }
 
@@ -90,14 +118,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // RECEIVE MESSAGE
   // ------------------------------------------------
   window.appSocket.on("receive-message", async (data) => {
-    if (!data || !data.messageId) return;
+    if (!data || data.roomId !== roomId) return;
 
     try {
-      if (!window.sharedSecret) {
-        console.warn(" Waiting for key before decrypt...");
-        await window.messagingReady;
-      }
-
       const text = await window.decryptMessage(
         data.ciphertext,
         data.nonce,
@@ -107,11 +130,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderMessage({
         id: data.messageId,
         text,
-        sender: "them",
+        sender: data.sender === myUserId ? "me" : "them",
         state: MESSAGE_STATE.SENT,
-        timestamp: Date.now(),
+        timestamp: data.createdAt || Date.now(),
       });
-
     } catch (err) {
       console.error("Decryption failed:", err);
     }
@@ -124,7 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const input = document.getElementById("messageInput");
 
   if (!sendBtn || !input) {
-    console.warn(" Chat input elements missing");
+    console.warn("⚠️ Chat input elements missing");
     return;
   }
 
@@ -166,7 +188,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
 
     div.querySelector(".text").textContent = msg.text;
-
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
   }

@@ -10,7 +10,7 @@ const { Server } = require("socket.io");
 const onlineUsers = new Map();
 const offlineTimers = new Map(); 
 const User = require("./Models/user");
-
+const Message = require("./Models/message")
 const attachUser = require('./middlewares/attachUser');
 
 const Blog = require('./Models/blog');
@@ -80,14 +80,28 @@ io.on("connection", async (socket) => {
   });
 
   // RECEIVE MESSAGE FROM SENDER
-  socket.on("send-message", ({ roomId, messageId, ciphertext, nonce }) => {
+  socket.on("send-message",async ({ roomId, messageId, ciphertext, nonce }) => {
     // Forward to everyone else in the room
-    socket.to(roomId).emit("receive-message", {
-      messageId,
+    if (!roomId || !ciphertext || !nonce) return;
+
+    const message = await Message.create({
+      roomId,
+      sender: socket.userId, // set during auth
       ciphertext,
       nonce,
     });
+
+      io.to(roomId).emit("receive-message", {
+      _id: message._id,
+      roomId,
+      sender: socket.userId,
+      ciphertext,
+      nonce,
+      createdAt: message.createdAt,
+    });
   });
+
+  
   socket.on("disconnect", () => {
     const sockets = onlineUsers.get(userId);
     if (!sockets) return;

@@ -1,5 +1,11 @@
 const conversationSchema = new Schema(
   {
+    roomId: {
+      type: String,
+      unique: true,
+      index: true,
+      required: true,
+    },
     members: [{
       type: Schema.Types.ObjectId,
       ref: "user",
@@ -8,5 +14,3 @@ const conversationSchema = new Schema(
   },
   { timestamps: true }
 );
-
-module.exports = model("conversation", conversationSchema);

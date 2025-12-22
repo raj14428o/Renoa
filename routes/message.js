@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const User = require("../Models/user");
 const getRoomId = require("../utils/chatroom");
+const authMiddleware = require("../middlewares/attachUser");
+const Message = require("../Models/message");
 // Messages list page
 router.get("/", async (req, res) => {
   if (!req.user) return res.redirect("/user/signin");
@@ -74,5 +76,15 @@ router.get("/search", async (req, res) => {
   res.json({ users });
 });
 
+
+router.get("/:roomId", authMiddleware, async (req, res) => {
+  const { roomId } = req.params;
+
+  const messages = await Message.find({ roomId })
+    .sort({ createdAt: 1 })
+    .select("sender ciphertext nonce createdAt");
+
+  res.json(messages);
+});
 
 module.exports = router;
