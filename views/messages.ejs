@@ -37,14 +37,17 @@
     <input type="text" id="topUserSearch" placeholder="Search users..." />
   </div>
 
-  <% if (!roomId) { %>
-    <div class="chat-empty">
-      <h3>Select a conversation</h3>
-      <p>Choose a user to start chatting</p>
-    </div>
-  <% } else { %>
-    <%- include("./partials/chat-box", { chatUser, roomId }) %>
-  <% } %>
+ <% if (!roomId) { %>
+  <div id="chatEmpty" class="chat-empty">
+    <h3>Select a conversation</h3>
+    <p>Choose a user to start chatting</p>
+  </div>
+
+  <div id="conversationHistory"></div>
+<% } else { %>
+  <%- include("./partials/chat-box", { chatUser, roomId }) %>
+<% } %>
+
 </div>
 
 
@@ -426,6 +429,12 @@ socket.on("user-last-seen", ({ userId, lastSeen }) => {
     updateChatHeaderStatus(`Last seen at ${time}`);
   }
 });
+// Refresh conversation list when backend says it changed
+socket.on("conversation-updated", () => {
+  console.log("🔥 conversation-updated received");
+  loadConversationHistory();
+});
+
 window.sharedSecret = null;
 
 //encryption and decryption functions
@@ -495,5 +504,6 @@ window.decryptMessage = decryptMessage;
 </script>
 
 <script src="/js/chatCrypto.js"></script>
+<script src="/js/conversationHistory.js"></script>
 
 

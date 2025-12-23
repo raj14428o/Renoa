@@ -4,6 +4,26 @@ const User = require("../Models/user");
 const getRoomId = require("../utils/chatroom");
 const authMiddleware = require("../middlewares/attachUser");
 const Message = require("../Models/message");
+const Conversation = require("../Models/conversation");
+const mongoose = require('mongoose')
+// routes/message.js
+router.get("/conversations", async (req, res) => {
+ 
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  const userId = new mongoose.Types.ObjectId(req.user._id);
+
+  const conversations = await Conversation.find({
+    members: { $in: [userId] },   
+  })
+    .sort({ lastMessageAt: -1 })
+    .populate("members", "fullName profileImageUrl")
+    .lean();
+
+  res.json({ conversations });
+});
+
 // Messages list page
 router.get("/", async (req, res) => {
   if (!req.user) return res.redirect("/user/signin");
@@ -86,5 +106,7 @@ router.get("/:roomId", authMiddleware, async (req, res) => {
 
   res.json(messages);
 });
+
+
 
 module.exports = router;

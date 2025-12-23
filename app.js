@@ -8,11 +8,11 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const { Server } = require("socket.io");
 const onlineUsers = new Map();
-const offlineTimers = new Map(); 
+const offlineTimers = new Map();
 const User = require("./Models/user");
 const Message = require("./Models/message")
 const attachUser = require('./middlewares/attachUser');
-
+const Conversation = require("./Models/conversation");
 const Blog = require('./Models/blog');
 const UserRoute = require("./routes/user");
 const BlogRoute = require("./routes/blog");
@@ -73,35 +73,71 @@ io.on("connection", async (socket) => {
     socket.join(blogId);
   });
 
-    // JOIN CHAT ROOM
+  // JOIN CHAT ROOM
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
     console.log(`User ${userId} joined room ${roomId}`);
   });
 
-  // RECEIVE MESSAGE FROM SENDER
-  socket.on("send-message",async ({ roomId, messageId, ciphertext, nonce }) => {
-    // Forward to everyone else in the room
-    if (!roomId || !ciphertext || !nonce) return;
 
-    const message = await Message.create({
-      roomId,
-      sender: socket.userId, // set during auth
-      ciphertext,
-      nonce,
-    });
 
-      io.to(roomId).emit("receive-message", {
-      _id: message._id,
-      roomId,
-      sender: socket.userId,
-      ciphertext,
-      nonce,
-      createdAt: message.createdAt,
-    });
+// RECEIVE MESSAGE FROM SENDER
+socket.on("send-message", async ({ roomId, messageId, ciphertext, nonce }) => {
+  if (!roomId || !ciphertext || !nonce) return;
+
+  const senderId = socket.userId;
+
+  const [u1, u2] = roomId.split("_");
+
+  // convert to ObjectIds
+  const user1 = u2;
+  const user2 = u1;
+
+  const receiverId = senderId === u1 ? u2 : u1;
+
+  // save encrypted message
+  const message = await Message.create({
+    roomId,
+    sender: senderId,
+    ciphertext,
+    nonce,
   });
 
-  
+  //  update / create conversation
+  await Conversation.findOneAndUpdate(
+  { roomId },
+  {
+    $set: {
+      roomId,
+      members: [user1, user2],
+      lastMessage: {
+        text: "Encrypted message",
+        sender: senderId,
+      },
+      lastMessageAt: message.createdAt,
+    },
+    $inc: { [`unreadCount.${receiverId}`]: 1 },
+  },
+  { upsert: true, new: true }
+);
+
+
+  // send message to room (exclude sender tab duplication handled client-side)
+  socket.to(roomId).emit("receive-message", {
+    _id: message._id,
+    roomId,
+    sender: senderId,
+    ciphertext,
+    nonce,
+    createdAt: message.createdAt,
+  });
+
+  //  notify clients to refresh conversation list
+  io.to(roomId).emit("conversation-updated");
+});
+
+
+
   socket.on("disconnect", () => {
     const sockets = onlineUsers.get(userId);
     if (!sockets) return;
