@@ -1,4 +1,5 @@
-console.log("📦 chatCrypto.js loaded");
+
+console.log("chatCrypto.js loaded");
 // ------------------------------------------------
   // MESSAGE STATES
   // ------------------------------------------------
@@ -19,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await window.messagingReady;
 
-  const myUserId = window.myUserId; // MUST be set in EJS
+  const myUserId = window.myUserId; 
   const roomId = window.roomId;
 
   if (!roomId || !myUserId) {
@@ -120,6 +121,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.appSocket.on("receive-message", async (data) => {
     if (!data || data.roomId !== roomId) return;
 
+    if (data.sender === myUserId) return;
+    
     try {
       const text = await window.decryptMessage(
         data.ciphertext,
@@ -146,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const input = document.getElementById("messageInput");
 
   if (!sendBtn || !input) {
-    console.warn("⚠️ Chat input elements missing");
+    console.warn("Chat input elements missing");
     return;
   }
 
@@ -167,6 +170,48 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ------------------------------------------------
   // UI HELPERS
   // ------------------------------------------------
+  function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getDateLabel(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const isSameDay = (a, b) =>
+    a.getDate() === b.getDate() &&
+    a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
+
+  if (isSameDay(d, today)) return "Today";
+  if (isSameDay(d, yesterday)) return "Yesterday";
+
+  return d.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+let lastRenderedDate = null;
+
+function renderDateSeparator(label) {
+  const chat = document.getElementById("chatMessages");
+  if (!chat) return;
+
+  const sep = document.createElement("div");
+  sep.className = "date-separator";
+  sep.textContent = label;
+
+  chat.appendChild(sep);
+}
+
   function renderMessage(msg) {
     const chat = document.getElementById("chatMessages");
     if (!chat) return;
@@ -174,18 +219,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     const empty = chat.querySelector(".chat-empty");
     if (empty) empty.remove();
 
+ // Date separator logic
+
+function renderDateSeparator(label) {
+  const chat = document.getElementById("chatMessages");
+  if (!chat) return;
+
+  const sep = document.createElement("div");
+  sep.className = "date-separator";
+  sep.textContent = label;
+
+  chat.appendChild(sep);
+}
+
+
     const div = document.createElement("div");
     div.className = `message ${msg.sender}`;
     div.dataset.id = msg.id;
 
-    div.innerHTML = `
-      <div class="bubble">
-        <span class="text"></span>
+      div.innerHTML = `
+    <div class="bubble">
+      <span class="text"></span>
+      <div class="meta">
+        <span class="time">${formatTime(msg.timestamp)}</span>
         <span class="state">
           ${msg.state === MESSAGE_STATE.PENDING ? "⏳" : "✓"}
         </span>
       </div>
-    `;
+    </div>
+  `;
 
     div.querySelector(".text").textContent = msg.text;
     chat.appendChild(div);

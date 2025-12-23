@@ -111,6 +111,13 @@
         min-width: 120px;
       }
 
+      .profile-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        /* 🔑 fixes overflow */
+      }
+
       /* ===== Stats ===== */
       .profile-stats {
         display: flex;
@@ -232,7 +239,7 @@
         padding: 0.6rem 0;
       }
 
-      /* Hide scrollbar (but allow scrolling) */
+ 
       .blogs-scroll::-webkit-scrollbar,
       .comments-scroll::-webkit-scrollbar {
         width: 0px;
@@ -240,12 +247,16 @@
 
       .blogs-scroll {
         scrollbar-width: none;
-        /* Firefox */
       }
 
       .comments-scroll {
         scrollbar-width: none;
-        /* Firefox */
+      }
+
+      .profile-actions .btn,
+      .profile-actions .pill {
+        min-width: 120px;
+        justify-content: center;
       }
 
 
@@ -278,6 +289,7 @@
           width: 100%;
           margin-top: 1rem;
           flex-wrap: wrap;
+          flex-direction: column;
           gap: 10px;
         }
 
@@ -343,14 +355,16 @@
       .row.g-5 {
         --bs-gutter-x: 0;
       }
-      a.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;   /* removes underline */
-  line-height: normal;     /* fixes vertical alignment */
-}
 
+      a.btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        /* removes underline */
+        line-height: normal;
+        /* fixes vertical alignment */
+      }
     </style>
 </head>
 

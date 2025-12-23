@@ -1,3 +1,5 @@
+const { Schema, model } = require("mongoose");
+
 const conversationSchema = new Schema(
   {
     roomId: {
@@ -9,8 +11,32 @@ const conversationSchema = new Schema(
     members: [{
       type: Schema.Types.ObjectId,
       ref: "user",
+      required: true,
     }],
-    lastMessageAt: Date,
+    lastMessage: {
+      text: {
+        type: String,
+        default: "",
+      },
+      sender: {
+        type: Schema.Types.ObjectId,
+        ref: "user",
+      },
+    },
+       lastMessageAt: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+      unreadCount: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
   },
+
   { timestamps: true }
 );
+conversationSchema.index({ members: 1, lastMessageAt: -1 });
+const Conversation = model("conversation", conversationSchema);
+module.exports = Conversation;
