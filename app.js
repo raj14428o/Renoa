@@ -42,6 +42,8 @@ io.use((socket, next) => {
 io.on("connection", async (socket) => {
   const userId = socket.userId;
 
+  socket.join(`user:${userId}`);
+
   // Cancel pending offline timer if reconnecting
   if (offlineTimers.has(userId)) {
     clearTimeout(offlineTimers.get(userId));
@@ -74,33 +76,59 @@ io.on("connection", async (socket) => {
     socket.join(blogId);
   });
 
-  // JOIN CHAT ROOM
-  socket.on("join-room",async (roomId) => {
-    socket.join(roomId);
-    
-    if (!roomPresence.has(roomId)) {
-    roomPresence.set(roomId, new Set());
+  socket.on("join-room", async (roomId) => {
+  socket.join(roomId);
+
+  if (!roomPresence.has(roomId)) {
+    roomPresence.set(roomId, new Map());
   }
-  roomPresence.get(roomId).add(socket.userId);
-  
-     await Message.updateMany(
+
+  const users = roomPresence.get(roomId);
+
+  if (!users.has(socket.userId)) {
+    users.set(socket.userId, new Set());
+  }
+
+  users.get(socket.userId).add(socket.id);
+
+  await Message.updateMany(
     {
       roomId,
       sender: { $ne: socket.userId },
       readAt: null,
     },
-    {
-      $set: { readAt: new Date() },
-    }
+    { $set: { readAt: new Date() } }
   );
-   socket.to(roomId).emit("messages-seen", {
+
+  io.to(roomId).emit("messages-seen", {
     roomId,
     seenBy: socket.userId,
   });
-    console.log(`User ${userId} joined room ${roomId}`);
-  });
+
+  console.log(`User ${socket.userId} joined room ${roomId}`);
+});
 
 
+
+socket.on("leave-room", (roomId) => {
+  const users = roomPresence.get(roomId);
+  if (!users) return;
+
+  const sockets = users.get(socket.userId);
+  if (!sockets) return;
+
+  sockets.delete(socket.id);
+
+  if (sockets.size === 0) {
+    users.delete(socket.userId);
+  }
+
+  if (users.size === 0) {
+    roomPresence.delete(roomId);
+  }
+
+  socket.leave(roomId);
+});
 
 // RECEIVE MESSAGE FROM SENDER
 socket.on("send-message", async ({ roomId, ciphertext, nonce }) => {
@@ -168,13 +196,43 @@ socket.on("send-message", async ({ roomId, ciphertext, nonce }) => {
   }
 
   // notify clients to refresh conversation list
-  io.to(roomId).emit("conversation-updated");
+  io.to(`user:${u1}`).emit("conversation-updated", {
+  roomId,
+  lastMessage: "Encrypted message",
+  lastMessageAt: message.createdAt,
+  sender: senderId,
+});
+
+io.to(`user:${u2}`).emit("conversation-updated", {
+  roomId,
+  lastMessage: "Encrypted message",
+  lastMessageAt: message.createdAt,
+  sender: senderId,
+});
+
 });
 
 
 
 
   socket.on("disconnect", () => {
+    socket.on("disconnect", () => {
+  for (const [roomId, users] of roomPresence.entries()) {
+    const sockets = users.get(socket.userId);
+    if (!sockets) continue;
+
+    sockets.delete(socket.id);
+
+    if (sockets.size === 0) {
+      users.delete(socket.userId);
+    }
+
+    if (users.size === 0) {
+      roomPresence.delete(roomId);
+    }
+  }
+});
+
     const sockets = onlineUsers.get(userId);
     if (!sockets) return;
 

@@ -284,6 +284,36 @@ item.querySelector("img").src =
   });
 });
 
+window.appSocket.on("conversation-updated", (data) => {
+  updateConversationRow(data);
+});
+function updateConversationRow({ roomId, lastMessage, lastMessageAt }) {
+  const row = document.querySelector(`[data-room="${roomId}"]`);
+  if (!row) return;
+
+  row.querySelector(".last-message").textContent = lastMessage;
+  row.querySelector(".time").textContent =
+    new Date(lastMessageAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  // move to top
+  row.parentNode.prepend(row);
+}
+window.addEventListener("beforeunload", () => {
+  if (!window.roomId) return;
+  window.appSocket.emit("leave-room", window.roomId);
+});
+function switchRoom(newRoomId) {
+  if (window.roomId) {
+    window.appSocket.emit("leave-room", window.roomId);
+  }
+
+  window.roomId = newRoomId;
+  window.appSocket.emit("join-room", newRoomId);
+}
+
 
   // -----------------------------
   // LIVE PRESENCE UPDATES
