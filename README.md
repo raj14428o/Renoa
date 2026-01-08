@@ -34,7 +34,7 @@
 
 
 
-## Overview
+## About
 
 **Renoa** is a full-stack social blogging and networking platform focused on **security, ownership, and real-time interaction**.  
 Users can publish blogs, interact through real-time comments, follow creators, and communicate privately using **device-based end-to-end encrypted messaging**.
