@@ -31,6 +31,33 @@
 
 ---
 
+## Table of Contents
+
+- [About](#about)
+- [Live Demo](#-live-demo)
+- [Features Overview](#features-overview)
+  - [Authentication & Security](#authentication--security)
+  - [Access Control Model](#-access-control-model)
+  - [Blogging System](#-blogging-system)
+  - [Real-Time Comments](#-real-time-comments)
+  - [User Profiles](#-user-profiles)
+  - [Encrypted Private Messaging](#-encrypted-private-messaging)
+- [Deployment](#deployment)
+- [Security Highlights](#-security-highlights)
+- [Tech Stack](#-tech-stack)
+- [System Design](#system-design)
+  - [Request Flow & Infrastructure Design](#-request-flow--infrastructure-design)
+  - [Encrypted Messaging Design](#-encrypted-messaging-design)
+  - [Authentication Flow](#-authentication-flow-system-level)
+  - [Route Overview](#route-overview)
+- [Infrastructure Responsibilities](#-infrastructure-responsibilities)
+- [Architectural Rationale](#architectural-rationale)
+- [Why This Architecture Was Chosen](#-why-this-architecture-was-chosen)
+- [Scaling Considerations](#scaling-considerations-future)
+- [Environment Setup](#-environment-setup)
+- [Run Locally](#run-locally)
+- [Design Philosophy](#-design-philosophy)
+
 
 
 
@@ -43,7 +70,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 🌐 Live Demo
+##  Live Demo
 
 **Renoa App:** https://renoa.app
 
@@ -64,7 +91,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 👥 Access Control Model
+## Access Control Model
 
 ### ✔ Authenticated Users
 - Create, edit, and delete blogs
@@ -87,7 +114,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 📝 Blogging System
+## Blogging System
 
 - Rich blog editor with:
   - Title
@@ -99,14 +126,14 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## ⚡ Real-Time Comments
+## Real-Time Comments
 
 - Live comment updates without page refresh
 - All users viewing a blog receive updates instantly
 
 ---
 
-## 👤 User Profiles
+## User Profiles
 
 - Displays user information and authored blogs
 - Profile owners can update personal details
@@ -116,7 +143,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 🔒 Encrypted Private Messaging
+## Encrypted Private Messaging
 
 > Device-based end-to-end encryption
 
@@ -136,7 +163,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 💬 Messaging Capabilities
+## Messaging Capabilities
 
 - Real-time messaging
 - Message sent & seen status
@@ -159,7 +186,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 🛡️ Security Highlights
+## Security Highlights
 
 - OTP-based email ownership verification
 - Hashed OTP storage (bcrypt)
@@ -171,7 +198,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - Node.js
@@ -218,7 +245,7 @@ MongoDB (Primary Data Store)
 ```
 
 ---
-## 🌐 Request Flow & Infrastructure Design
+## Request Flow & Infrastructure Design
 
 Renoa uses a production-oriented request flow that separates **DNS, SSL, and application hosting** to improve security and manageability.
 
@@ -253,7 +280,7 @@ AWS Elastic Beanstalk
         MongoDB (Primary Database)
 ```
 ---
-## 🔒 Encrypted Messaging Design
+## Encrypted Messaging Design
 
 Private messaging in Renoa uses **device-based end-to-end encryption** to ensure that only intended recipients can read messages.
 
@@ -322,7 +349,7 @@ Verified Account → Login Allowed
 
 Below is a code-accurate overview of the major application routes used in Renoa.
 
-### 🔑 Authentication & User Routes (`/user`)
+### Authentication & User Routes (`/user`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -341,7 +368,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### 👤 Profile Routes (`/user/profile`)
+### Profile Routes (`/user/profile`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -353,7 +380,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### 📝 Blog Routes (`/blog`)
+### Blog Routes (`/blog`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -367,7 +394,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### 💬 Comment Routes (`/blog`)
+### Comment Routes (`/blog`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -375,7 +402,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### 👥 Follow System (API) (`/api`)
+### Follow System (API) (`/api`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -386,7 +413,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### 💬 Messaging Routes (`/messages`)
+### Messaging Routes (`/messages`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -399,7 +426,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### 🔐 Device & Encryption Routes (`/api/devices`)
+### Device & Encryption Routes (`/api/devices`)
 
 | Route | Method | Description |
 |------|--------|-------------|
@@ -408,7 +435,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### ⚙️ WebSocket Events (Internal)
+### WebSocket Events (Internal)
 
 | Event | Purpose |
 |------|--------|
@@ -419,7 +446,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-### ⚙️ Route Mounting Summary
+### Route Mounting Summary
 
 ```text
 /                → Homepage
@@ -429,7 +456,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 /api             → Follow system
 /api/devices     → Device & Encryption
 ```
-## 🏗️ Infrastructure Responsibilities
+## Infrastructure Responsibilities
 
 ### Client (Browser)
 - Initiates HTTPS requests
@@ -483,7 +510,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-## 🤔 Why This Architecture Was Chosen
+## Why This Architecture Was Chosen
 
 - **Cloudflare** simplifies SSL and DNS management
 - **AWS Elastic Beanstalk** reduces operational overhead
@@ -498,7 +525,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 - Add **Redis** for caching and real-time optimizations
 - Move media storage to **AWS S3**
 
-## ⚙️ Environment Setup
+## Environment Setup
 
 ```env
 PORT=8000
@@ -513,7 +540,7 @@ JWT_SECRET=your_jwt_secret
 
 ```
 
-## 🔐 Environment Variable Description
+## Environment Variable Description
 
 | Variable         | Description                              |
 |------------------|------------------------------------------|
@@ -533,7 +560,7 @@ npm install
 npm start
 ```
 
-## 🎯 Design Philosophy
+## Design Philosophy
 
 - Security over convenience
 - Clear ownership boundaries
