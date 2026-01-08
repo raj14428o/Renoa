@@ -34,32 +34,29 @@
 ## Table of Contents
 
 - [About](#about)
-- [Live Demo](#-live-demo)
+- [Live Demo](#live-demo)
 - [Features Overview](#features-overview)
   - [Authentication & Security](#authentication--security)
-  - [Access Control Model](#-access-control-model)
-  - [Blogging System](#-blogging-system)
-  - [Real-Time Comments](#-real-time-comments)
-  - [User Profiles](#-user-profiles)
-  - [Encrypted Private Messaging](#-encrypted-private-messaging)
+  - [Access Control Model](#access-control-model)
+  - [Blogging System](#blogging-system)
+  - [Real-Time Comments](#real-time-comments)
+  - [User Profiles](#user-profiles)
+  - [Encrypted Private Messaging](#encrypted-private-messaging)
 - [Deployment](#deployment)
-- [Security Highlights](#-security-highlights)
-- [Tech Stack](#-tech-stack)
+- [Security Highlights](#security-highlights)
+- [Tech Stack](#tech-stack)
 - [System Design](#system-design)
-  - [Request Flow & Infrastructure Design](#-request-flow--infrastructure-design)
-  - [Encrypted Messaging Design](#-encrypted-messaging-design)
-  - [Authentication Flow](#-authentication-flow-system-level)
+  - [Request Flow & Infrastructure Design](#request-flow--infrastructure-design)
+  - [Encrypted Messaging Design](#encrypted-messaging-design)
+  - [Authentication Flow](#authentication-flow-system-level)
   - [Route Overview](#route-overview)
-- [Infrastructure Responsibilities](#-infrastructure-responsibilities)
+- [Infrastructure Responsibilities](#infrastructure-responsibilities)
 - [Architectural Rationale](#architectural-rationale)
-- [Why This Architecture Was Chosen](#-why-this-architecture-was-chosen)
+- [Why This Architecture Was Chosen](#why-this-architecture-was-chosen)
 - [Scaling Considerations](#scaling-considerations-future)
-- [Environment Setup](#-environment-setup)
+- [Environment Setup](#environment-setup)
 - [Run Locally](#run-locally)
-- [Design Philosophy](#-design-philosophy)
-
-
-
+- [Design Philosophy](#design-philosophy)
 
 ## About
 
