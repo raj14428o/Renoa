@@ -1,9 +1,17 @@
 <p align="center">
-  <h1 align="center">Renoa</h1>
-  <p align="center">
-    A Secure Social Blogging & Real-Time Communication Platform
-  </p>
+  <img 
+    src="public/images/Renoa_logo.png" 
+    width="140" 
+    alt="Renoa Logo"
+  />
 </p>
+
+<p align="center">
+  A Secure Social Blogging & Real-Time Communication Platform
+</p>
+
+
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production%20Ready-success" />
