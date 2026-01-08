@@ -52,7 +52,6 @@
   - [Route Overview](#route-overview)
 - [Infrastructure Responsibilities](#infrastructure-responsibilities)
 - [Architectural Rationale](#architectural-rationale)
-- [Why This Architecture Was Chosen](#why-this-architecture-was-chosen)
 - [Scaling Considerations](#scaling-considerations-future)
 - [Environment Setup](#environment-setup)
 - [Run Locally](#run-locally)
@@ -147,7 +146,7 @@ The platform enforces strict authentication and authorization rules while mainta
 - Private keys are generated **only when visiting `/messages`**
 - Each device creates a **unique private key per user**
 - Keys are securely stored using **IndexedDB**
-- Messages can be sent to users who have never opened `/messages`
+- Messages can be sent to users who have opened `/messages`
 
 ### Device Behavior
 
@@ -507,14 +506,6 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-## Why This Architecture Was Chosen
-
-- **Cloudflare** simplifies SSL and DNS management
-- **AWS Elastic Beanstalk** reduces operational overhead
-- A **single EC2 instance** is sufficient for the current scale
-- Clear separation between network security and application logic
-- Easy to scale vertically or horizontally in the future
----
 ## Scaling Considerations (Future)
 
 - Introduce a load balancer in front of EC2 instances
