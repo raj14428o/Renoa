@@ -30,6 +30,14 @@
 
 
 ---
+## TL;DR
+
+Renoa is a production-ready social blogging platform featuring:
+- Secure OTP + JWT authentication
+- Real-time blogs, comments, and messaging
+- Device-based end-to-end encrypted private chats
+- AWS + Cloudflare production deployment
+
 
 ## Table of Contents
 
@@ -55,6 +63,7 @@
 - [Scaling Considerations](#scaling-considerations-future)
 - [Environment Setup](#environment-setup)
 - [Run Locally](#run-locally)
+- [Known Limitations](#known-limitations)
 - [Design Philosophy](#design-philosophy)
 
 ## About
@@ -80,7 +89,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 - User registration with **email verification via OTP**
 - OTPs are **bcrypt-hashed** and time-bound
-- Passwords stored using **SHA-256 with salting**
+- Passwords hashed using a salted, cryptographically secure hashing strategy
 - JWT-based authentication for protected routes
 - Mandatory re-verification on email change
 - Secure password recovery using OTP verification
@@ -97,6 +106,8 @@ The platform enforces strict authentication and authorization rules while mainta
 - Edit profile information
 - Follow users
 - Send and receive encrypted messages
+- WebSocket connections are authenticated using JWT
+
 
 ### 👀 Public Visitors
 - View blogs
@@ -131,8 +142,8 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ## User Profiles
 
-- Displays user information and authored blogs
-- Profile owners can update personal details
+- Displays user information, authored blogs, and comments
+- Profile owners can update personal details and share their profile links
 - Other users can:
   - Follow / unfollow
   - Initiate private messaging
@@ -186,7 +197,7 @@ The platform enforces strict authentication and authorization rules while mainta
 
 - OTP-based email ownership verification
 - Hashed OTP storage (bcrypt)
-- Salted password hashing (SHA-256)
+- Passwords hashed using a salted, cryptographically secure hashing strategy
 - JWT-protected routes
 - Client-side encryption
 - Device-based key isolation
@@ -202,7 +213,6 @@ The platform enforces strict authentication and authorization rules while mainta
 - MongoDB
 - JWT
 - bcrypt
-- SHA-256
 
 ### Frontend
 - EJS
@@ -324,12 +334,12 @@ Receiving / Decrypting Message
 
 ----
 
-### 🔐 Authentication Flow (System Level)
+### Authentication Flow (System Level)
 ```
 User Signup
    │
    ├── Register (name, email, password)
-   ├── Password hashed (SHA-256 + salt)
+   ├── Password hashed (Password hashed with per-user salt)
    ├── OTP generated & bcrypt-hashed
    └── Email verification required
         │
@@ -493,6 +503,24 @@ Below is a code-accurate overview of the major application routes used in Renoa.
   - Blogs
   - Comments
   - Encrypted messages
+    
+### IndexedDB (Client-Side Secure Storage)
+
+- Used to store **device-scoped private encryption keys**
+- Private keys are generated per user **per device**
+- Keys never leave the client and are never transmitted to the server
+- IndexedDB allows persistent, origin-scoped storage across browser sessions
+- Enables strict **device-level message isolation** for end-to-end encryption
+
+### JWT Session Management
+
+- JWTs are issued upon successful authentication
+- Tokens are used to authorize:
+  - Protected HTTP routes
+  - WebSocket connections
+- JWTs are verified on every request and socket handshake
+- Sessions are stateless, reducing server-side session storage overhead
+- Token expiration and re-authentication are enforced for security
 
 ---
 
@@ -547,6 +575,11 @@ cd renoa
 npm install
 npm start
 ```
+## Known Limitations
+
+- Encrypted messages are device-bound by design
+- No multi-device message sync (intentional trade-off)
+- Single-instance deployment (current scale)
 
 ## Design Philosophy
 
