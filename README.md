@@ -192,6 +192,312 @@ The platform enforces strict authentication and authorization rules while mainta
 
 ---
 
+## System Design
+
+Renoa follows a **monolithic full-stack architecture** with clearly separated concerns for authentication, content management, real-time communication, and encrypted messaging.
+
+---
+
+### Application Architecture (High-Level)
+
+```text
+Client (Browser)
+   │
+   │  HTTP / WebSocket
+   ▼
+Node.js + Express Server
+   │
+   ├── Authentication & Authorization
+   ├── Blog & Comment Management
+   ├── Profile & Follow System
+   ├── Real-Time Messaging (WebSockets)
+   └── Encryption & Key Management
+   │
+   ▼
+MongoDB (Primary Data Store)
+```
+
+---
+## 🌐 Request Flow & Infrastructure Design
+
+Renoa uses a production-oriented request flow that separates **DNS, SSL, and application hosting** to improve security and manageability.
+
+### High-Level Request Flow
+
+```text
+Client (Browser)
+   │
+   │  HTTPS Request
+   ▼
+renoa.app (Domain)
+   │
+   │  DNS Resolution
+   ▼
+Cloudflare
+   │
+   ├── SSL / TLS Termination
+   ├── DNS Management
+   └── Secure Traffic Forwarding
+   │
+   ▼
+AWS Elastic Beanstalk
+   │
+   └── EC2 Instance (Node.js + Express)
+           │
+           ├── API & Page Rendering
+           ├── Authentication & Authorization
+           ├── Real-Time Messaging
+           └── Encryption Logic
+           │
+           ▼
+        MongoDB (Primary Database)
+```
+---
+## 🔒 Encrypted Messaging Design
+
+Private messaging in Renoa uses **device-based end-to-end encryption** to ensure that only intended recipients can read messages.
+
+### Encryption Workflow
+
+```text
+/messages route visited
+        │
+        ├── Device-specific private key generated
+        ├── Private key stored in IndexedDB
+        └── Public key shared with server
+
+
+Sending Message
+        │
+        ├── Sender private key
+        ├── Receiver public key
+        └── Shared encryption key generated
+             │
+             ▼
+        Encrypted message stored in database
+
+
+Receiving / Decrypting Message
+        │
+        ├── Encrypted message fetched from database
+        ├── Receiver private key (from IndexedDB)
+        ├── Sender public key
+        └── Shared decryption key derived
+             │
+             ▼
+        Ciphertext decrypted on client
+
+
+```
+### Key Properties
+
+- Private keys never leave the client
+- Messages can't be sent if the receiver has never opened `/messages`
+- Messages are readable only on the originating device
+- Logging in on a new device:
+  - Generates a new private key
+  - Previously encrypted messages become inaccessible
+  - Messaging starts fresh
+
+----
+
+### 🔐 Authentication Flow (System Level)
+```
+User Signup
+   │
+   ├── Register (name, email, password)
+   ├── Password hashed (SHA-256 + salt)
+   ├── OTP generated & bcrypt-hashed
+   └── Email verification required
+        │
+        ▼
+Verified Account → Login Allowed
+        │
+        ├── JWT issued
+        └── Protected routes unlocked
+```
+---
+
+### Route Overview
+
+Below is a code-accurate overview of the major application routes used in Renoa.
+
+### 🔑 Authentication & User Routes (`/user`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/user/signup` | GET | Render signup page |
+| `/user/signup` | POST | Register new user |
+| `/user/signin` | GET | Render signin page |
+| `/user/signin` | POST | Login user |
+| `/user/logout` | GET | Logout user and clear session |
+| `/user/verify` | GET | Render email/OTP verification page |
+| `/user/verify` | POST | Verify OTP for signup or password reset |
+| `/user/resend-otp` | POST | Resend OTP to email |
+| `/user/forgot-password` | GET | Render forgot password page |
+| `/user/forgot-password` | POST | Initiate password reset |
+| `/user/reset-password` | GET | Render reset password page |
+| `/user/reset-password` | POST | Reset password after OTP verification |
+
+---
+
+### 👤 Profile Routes (`/user/profile`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/user/profile/:id` | GET | View user profile |
+| `/user/profile/edit` | GET | Render profile edit page |
+| `/user/profile/edit/image` | POST | Update profile image |
+| `/user/profile/edit/name` | POST | Update profile name |
+| `/user/profile/edit/email` | POST | Update email (requires re-verification) |
+
+---
+
+### 📝 Blog Routes (`/blog`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/blog/add-new` | GET | Render add blog page |
+| `/blog` | POST | Create new blog |
+| `/blog/:id` | GET | View blog details |
+| `/blog/:id/edit` | GET | Render edit blog page |
+| `/blog/:id/edit` | POST | Update existing blog |
+| `/blog/:id` | DELETE | Delete blog |
+| `/` | GET | Public blog feed (homepage) |
+
+---
+
+### 💬 Comment Routes (`/blog`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/blog/comment/:blogId` | POST | Add comment to a blog (real time) |
+
+---
+
+### 👥 Follow System (API) (`/api`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/api/users/:id/toggle-follow` | POST | Follow or unfollow a user |
+| `/api/users/:id/followers` | GET | Get followers of a user |
+| `/api/users/:id/following` | GET | Get users a user is following |
+| `/api/test` | GET | Auth test endpoint |
+
+---
+
+### 💬 Messaging Routes (`/messages`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/messages` | GET | Render messaging page |
+| `/messages/conversations` | GET | Fetch user conversations |
+| `/messages/room/:roomId` | GET | Render individual chat view |
+| `/messages/:roomId` | GET | Fetch messages for a conversation |
+| `/messages/clear-unread` | POST | Clear unread message count |
+| `/messages/search` | GET | Search users to start messaging |
+
+---
+
+### 🔐 Device & Encryption Routes (`/api/devices`)
+
+| Route | Method | Description |
+|------|--------|-------------|
+| `/api/devices/register` | POST | Register device public key |
+| `/api/devices/public/:userId` | GET | Fetch latest public key of a user |
+
+---
+
+### ⚙️ WebSocket Events (Internal)
+
+| Event | Purpose |
+|------|--------|
+| `new-comment` | Real-time blog comments |
+| `user-updated` | Broadcast profile updates |
+| `message` | Real-time encrypted chat |
+| `presence` | Online / offline tracking |
+
+---
+
+### ⚙️ Route Mounting Summary
+
+```text
+/                → Homepage
+/user            → Authentication & Profile
+/blog            → Blogs & Comments
+/messages        → Private Messaging
+/api             → Follow system
+/api/devices     → Device & Encryption
+```
+## 🏗️ Infrastructure Responsibilities
+
+### Client (Browser)
+- Initiates HTTPS requests
+- Performs client-side encryption and decryption
+- Stores device-specific private keys using **IndexedDB**
+
+---
+
+### Cloudflare
+- Manages DNS for `renoa.app`
+- Provides **SSL/TLS certificates**
+- Enforces HTTPS across the application
+- Acts as a secure entry point before AWS
+
+---
+
+### AWS Elastic Beanstalk
+- Hosts the Node.js application
+- Manages the underlying EC2 instance
+- Handles application process management
+- Exposes the application via a public IP
+
+---
+
+### EC2 Instance
+- Runs the Express server
+- Handles:
+  - Authentication & JWT validation
+  - Blog and comment APIs
+  - WebSocket connections
+  - Encrypted messaging logic
+
+---
+
+### MongoDB
+- Primary data store for:
+  - Users
+  - Blogs
+  - Comments
+  - Encrypted messages
+
+---
+
+##  Architectural Rationale
+
+- **Cloudflare** simplifies DNS and SSL management
+- **Elastic Beanstalk** reduces operational overhead
+- A **single EC2 instance** is sufficient for the current scale
+- Clear separation between network security and application logic
+- Architecture is easy to extend and scale
+
+---
+
+## 🤔 Why This Architecture Was Chosen
+
+- **Cloudflare** simplifies SSL and DNS management
+- **AWS Elastic Beanstalk** reduces operational overhead
+- A **single EC2 instance** is sufficient for the current scale
+- Clear separation between network security and application logic
+- Easy to scale vertically or horizontally in the future
+---
+## Scaling Considerations (Future)
+
+- Introduce a load balancer in front of EC2 instances
+- Scale horizontally with multiple EC2 instances
+- Add **Redis** for caching and real-time optimizations
+- Move media storage to **AWS S3**
+
 ## ⚙️ Environment Setup
 
 ```env
