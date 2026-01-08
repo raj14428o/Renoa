@@ -497,7 +497,7 @@ Below is a code-accurate overview of the major application routes used in Renoa.
 
 ---
 
-##  Architectural Rationale
+## Architectural Rationale
 
 - **Cloudflare** simplifies DNS and SSL management
 - **Elastic Beanstalk** reduces operational overhead
