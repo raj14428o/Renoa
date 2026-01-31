@@ -204,6 +204,9 @@
 
 /* SHOW only on mobile */
 @media (max-width: 900px) {
+    .messages-left.open ~ .messages-right .mobile-topbar {
+    display: none;
+  }
 
   /* kill grid completely */
   .messages-layout {
