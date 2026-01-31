@@ -5,9 +5,9 @@ const path = require("path");
 const fs = require("fs");
 const mongoose = require("mongoose");
 
-const User = require("../Models/user");
-const Blog = require("../Models/blog");
-const Comment = require("../Models/comments");
+const User = require("../models/user");
+const Blog = require("../models/blog");
+const Comment = require("../models/comments");
 
 /* ------------------ HELPERS ------------------ */
 

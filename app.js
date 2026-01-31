@@ -9,13 +9,14 @@ const session = require('express-session');
 const { Server } = require("socket.io");
 const onlineUsers = new Map();
 const offlineTimers = new Map();
-const User = require("./Models/user");
-const Message = require("./Models/message")
+const User = require("./models/user");
+const Message = require("./models/message")
 const attachUser = require('./middlewares/attachUser');
-const Conversation = require("./Models/conversation");
-const Blog = require('./Models/blog');
+const Conversation = require("./models/conversation");
+const Blog = require('./models/blog');
 const UserRoute = require("./routes/user");
 const BlogRoute = require("./routes/blog");
+const ChatInviteRoute = require("./routes/chatInvites");
 const followApiRoutes = require("./routes/follow");
 const MessageRoute = require("./routes/message");
 const deviceRoutes = require("./routes/device");
@@ -345,7 +346,7 @@ app.use("/api/devices", deviceRoutes);
 app.use('/user', UserRoute);
 app.use('/blog', BlogRoute);
 app.use("/messages", MessageRoute);
-
+app.use("/api/chat", ChatInviteRoute);
 /* ================= START ================= */
 
 server.listen(PORT, () => {

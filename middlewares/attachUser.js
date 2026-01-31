@@ -1,4 +1,4 @@
-const User = require("../Models/user");
+const User = require("../models/user");
 const { validateToken } = require("../services/authentication");
 
 module.exports = async function attachUser(req, res, next) {

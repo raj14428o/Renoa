@@ -1,4 +1,4 @@
-const User = require("../Models/user");
+const User = require("../models/user");
 
 exports.toggleFollow = async (req, res) => {
   try {

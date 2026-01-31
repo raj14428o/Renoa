@@ -181,8 +181,6 @@ async function initDeviceKeys(userId) {
 const myUserId = "<%= user._id %>";
 window.messagingReady = (async () => {
   await initDeviceKeys(myUserId);
-
-
   if (activeChatUserId) {
     // window.sharedSecret = await deriveSharedSecret(activeChatUserId);
     socket.emit("join-room", "<%= roomId %>");
@@ -366,12 +364,34 @@ function switchRoom(newRoomId) {
 const searchBackdrop = document.getElementById("searchBackdrop");
 const searchResults = document.getElementById("searchResults");
 const showMoreBtn = document.getElementById("showMoreBtn");
+async function hasPublicKey(userId) {
+  try {
+    const res = await fetch(`/api/devices/public/${userId}`);
+    const data = await res.json();
+    return !!data.publicKey;
+  } catch {
+    return false;
+  }
+}
+
+async function sendChatInvite(userId) {
+  try {
+    await fetch("/api/chat/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+  } catch (err) {
+    console.error("Invite failed", err);
+  }
+}
 
 function openSearchModal(users) {
   searchResults.innerHTML = "";
 
   if (!users || users.length === 0) {
-    searchResults.innerHTML = "<p style='color:#666'>No users found</p>";
+    searchResults.innerHTML =
+      "<p style='color:#666'>No users found</p>";
   } else {
     users.forEach(u => {
       const div = document.createElement("div");
@@ -380,11 +400,22 @@ function openSearchModal(users) {
         <img src="${u.profileImageUrl}">
         <span>${u.fullName}</span>
       `;
-      div.onclick = () => {
-         const myId = "<%= user._id %>";
-  const roomId = [myId, u._id].sort().join("_");
-  window.location.href = `/messages/room/${roomId}`;
+
+      div.onclick = async () => {
+        const myId = "<%= user._id %>";
+        const roomId = [myId, u._id].sort().join("_");
+
+        const keyExists = await hasPublicKey(u._id);
+
+        if (!keyExists) {
+          alert("User is not active in chatroom. Invitation sent.");
+          sendChatInvite(u._id);
+          return;
+        }
+
+        window.location.href = `/messages/room/${roomId}`;
       };
+
       searchResults.appendChild(div);
     });
   }

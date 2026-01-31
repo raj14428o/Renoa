@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Device = require("../Models/device");
+const Device = require("../models/device");
 
 // get latest public key of a user
 router.get("/public/:userId", async (req, res) => {

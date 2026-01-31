@@ -1,8 +1,8 @@
 const { Router } = require('express');
 const bcrypt = require('bcryptjs');
-const User = require('../Models/user');
-const Blog = require('../Models/blog');
-const Comment = require('../Models/comments');
+const User = require('../models/user');
+const Blog = require('../models/blog');
+const Comment = require('../models/comments');
 const multer = require("multer");
 const path = require("path");
 

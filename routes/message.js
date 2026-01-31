@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../Models/user");
+const User = require("../models/user");
 const getRoomId = require("../utils/chatroom");
 const authMiddleware = require("../middlewares/attachUser");
-const Message = require("../Models/message");
-const Conversation = require("../Models/conversation");
+const Message = require("../models/message");
+const Conversation = require("../models/conversation");
 const mongoose = require('mongoose');
 
 // routes/message.js
