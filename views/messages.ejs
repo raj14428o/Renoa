@@ -184,7 +184,7 @@ window.messagingReady = (async () => {
 
 
   if (activeChatUserId) {
-    window.sharedSecret = await deriveSharedSecret(activeChatUserId);
+    // window.sharedSecret = await deriveSharedSecret(activeChatUserId);
     socket.emit("join-room", "<%= roomId %>");
   }
   return true;
@@ -241,7 +241,6 @@ async function deriveSharedSecret(otherUserId) {
 
   return sharedSecret; // ArrayBuffer
 }
-
 
   const socket = window.appSocket;
 
@@ -455,7 +454,9 @@ async function openChat(otherUserId) {
   window.location.href = `/messages/room/${roomId}`;
 }
 
-const activeChatUserId = <%- JSON.stringify(chatUser ? chatUser._id : null) %>;
+window.activeChatUserId =
+  <%- JSON.stringify(chatUser ? chatUser._id : null) %>;
+
 
 function updateChatHeaderStatus(text, isOnline = false) {
   const chatBox = document.querySelector(".chat-box");
@@ -494,7 +495,6 @@ socket.on("conversation-updated", () => {
   loadConversationHistory();
 });
 
-window.sharedSecret = null;
 
 //encryption and decryption functions
 

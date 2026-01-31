@@ -1,3 +1,20 @@
+window.sharedSecret = null;
+window.sharedSecretFor = null;
+
+async function getFreshSharedSecret() {
+  const otherUserId = window.activeChatUserId;
+  if (!otherUserId) throw new Error("No active chat user");
+
+ if (
+  window.sharedSecretFor !== otherUserId ||
+  !window.sharedSecret
+) {
+  window.sharedSecret = await deriveSharedSecret(otherUserId);
+  window.sharedSecretFor = otherUserId;
+}
+
+  return window.sharedSecret;
+}
 
 function generateUUID() {
   if (window.crypto && crypto.randomUUID) {
@@ -5,7 +22,7 @@ function generateUUID() {
   }
 
   // fallback (RFC4122 v4)
-  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   );
 }
@@ -86,10 +103,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     for (const msg of encryptedMessages) {
       try {
+        const secret = await getFreshSharedSecret();
         const text = await window.decryptMessage(
           msg.ciphertext,
           msg.nonce,
-          window.sharedSecret
+          secret
         );
 
         renderMessage({
@@ -108,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadMessages();
 
- 
+
 
   // ------------------------------------------------
   // SAFETY CHECKS
@@ -131,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function sendMessage(text) {
     if (!text) return;
 
-  const tempId = generateUUID();
+    const tempId = generateUUID();
 
 
     renderMessage({
@@ -145,8 +163,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     await window.messagingReady;
 
     try {
+      const secret = await getFreshSharedSecret();
+
       const { ciphertext, nonce } =
-        await window.encryptMessage(text, window.sharedSecret);
+        await window.encryptMessage(text, secret);
+
 
       window.appSocket.emit("send-message", {
         roomId,
@@ -167,13 +188,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!data || data.roomId !== roomId) return;
 
     if (data.sender === myUserId) return;
-    
-   
+
+
     try {
+      const secret = await getFreshSharedSecret();
+
       const text = await window.decryptMessage(
         data.ciphertext,
         data.nonce,
-        window.sharedSecret
+        secret
       );
 
       renderMessage({
@@ -308,4 +331,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     chat.scrollTop = chat.scrollHeight;
   }
 });
-
